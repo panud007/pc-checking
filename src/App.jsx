@@ -21,6 +21,8 @@ import {
   Search,
 } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1/Hardware_Checker_API/public/api';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('diagnostic'); // 'diagnostic' | 'intake'
   const [activeModule, setActiveModule] = useState('dashboard');
@@ -134,7 +136,7 @@ export default function App() {
 
   const fetchDiagnosticHistory = async (query = '') => {
     setIsLoadingHistory(true);
-    const apiEndpoint = `http://127.0.0.1/Hardware_Checker_API/public/api/diagnostics?search=${encodeURIComponent(query)}`;
+    const apiEndpoint = `${API_BASE_URL}/diagnostics?search=${encodeURIComponent(query)}`;
     try {
       const response = await fetch(apiEndpoint);
       if (!response.ok) throw new Error('API server returned error');
@@ -211,7 +213,7 @@ export default function App() {
 
     // 2. Save to Laravel API DB (Async)
     try {
-      const response = await fetch('http://127.0.0.1/Hardware_Checker_API/public/api/diagnostics', {
+      const response = await fetch(`${API_BASE_URL}/diagnostics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -250,7 +252,7 @@ export default function App() {
 
     // 2. Delete from remote Laravel API DB (Async)
     try {
-      const response = await fetch(`http://127.0.0.1/Hardware_Checker_API/public/api/diagnostics/${ticketId}`, {
+      const response = await fetch(`${API_BASE_URL}/diagnostics/${ticketId}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json'

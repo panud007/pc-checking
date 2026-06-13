@@ -239,6 +239,8 @@ const getInitialComponentsState = (completed = {}, reportData = {}) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1/Hardware_Checker_API/public/api';
+
 export default function ServiceIntakeForm({
   onBack,
   diagnosticCompleted = {},
@@ -358,7 +360,7 @@ export default function ServiceIntakeForm({
   // Fetch history from DB or LocalStorage
   const fetchHistory = async (query = '') => {
     setIsHistoryLoading(true);
-    const apiEndpoint = `http://127.0.0.1/Hardware_Checker_API/public/api/intakes?search=${encodeURIComponent(query)}`;
+    const apiEndpoint = `${API_BASE_URL}/intakes?search=${encodeURIComponent(query)}`;
     try {
       const response = await fetch(apiEndpoint);
       if (!response.ok) throw new Error('API server returned error');
@@ -665,7 +667,7 @@ export default function ServiceIntakeForm({
     };
 
     try {
-      const response = await fetch('http://127.0.0.1/Hardware_Checker_API/public/api/intakes', {
+      const response = await fetch(`${API_BASE_URL}/intakes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -720,7 +722,7 @@ export default function ServiceIntakeForm({
 
     // 2. Delete from remote Laravel API DB (Async)
     try {
-      const response = await fetch(`http://127.0.0.1/Hardware_Checker_API/public/api/intakes/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/intakes/${id}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json'
