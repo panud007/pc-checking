@@ -1,0 +1,482 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #09090b; /* Zinc-950 background */
+    color: #f4f4f5; /* Zinc-100 text */
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a; /* zinc-800 */
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46; /* zinc-700 */
+}
+
+/* Custom animations removed / simplified */
+.animate-scan {
+  display: none !important;
+}
+
+.animate-grid-drift {
+  background-image: none !important;
+  animation: none !important;
+}
+
+.animate-radial-pulse-1,
+.animate-radial-pulse-2 {
+  display: none !important;
+}
+
+.animate-spin-slow {
+  animation: none !important;
+}
+
+/* Flat minimal panel template */
+.glass-panel {
+  background: #18181b; /* zinc-900 */
+  border: 1px solid #27272a; /* zinc-800 */
+}
+
+.glass-panel-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  background: #202023; /* slightly lighter zinc */
+  border-color: #3f3f46; /* zinc-700 */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25), 0 4px 6px -4px rgba(0, 0, 0, 0.25);
+}
+
+/* ─────────────────────────────────────────
+   Consolidated Print Styles (A4 Page Print)
+   ───────────────────────────────────────── */
+@media print {
+  /* 1. Reset Global Body & HTML styles */
+  html, body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 2. Hide everything by default under the root */
+  #root > * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* 3. PRINT MODE A: Service Intake Form sheet (activeTab === 'intake') */
+  #root > .intake-print-area {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 auto !important;
+    background: white !important;
+    padding: 14mm 16mm 12mm !important;
+    box-sizing: border-box !important;
+    z-index: 9999 !important;
+  }
+
+  /* 4. PRINT MODE B: Diagnostic Report Modal (activeTab === 'diagnostic') */
+  #root > .print-modal-overlay {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    z-index: 9999 !important;
+  }
+
+  .print-modal-content {
+    display: block !important;
+    visibility: visible !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  .print-modal-grid {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .print-modal-header,
+  .print-modal-left-col {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .print-modal-right-col {
+    display: block !important;
+    visibility: visible !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  #pdf-print-area {
+    display: block !important;
+    visibility: visible !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 auto !important;
+    padding: 12mm 16mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: #000000 !important;
+  }
+
+  #pdf-print-area * {
+    visibility: visible !important;
+  }
+}
+
+.animate-border-glow {
+  border-color: #27272a !important;
+}
+
+/* Premium Accent Borders */
+.neon-border-emerald {
+  border: 1px solid #27272a;
+  border-top: 3px solid #10b981; /* soft emerald top border */
+  transition: all 0.2s ease;
+}
+.neon-border-emerald:hover {
+  border-color: #3f3f46;
+}
+
+.neon-border-blue {
+  border: 1px solid #27272a;
+  border-top: 3px solid #3b82f6; /* soft blue top border */
+  transition: all 0.2s ease;
+}
+.neon-border-blue:hover {
+  border-color: #3f3f46;
+}
+
+.neon-border-purple {
+  border: 1px solid #27272a;
+  border-top: 3px solid #a855f7; /* soft purple top border */
+  transition: all 0.2s ease;
+}
+.neon-border-purple:hover {
+  border-color: #3f3f46;
+}
+
+.neon-border-rose {
+  border: 1px solid #27272a;
+  border-top: 3px solid #f43f5e; /* soft rose top border */
+  transition: all 0.2s ease;
+}
+.neon-border-rose:hover {
+  border-color: #3f3f46;
+}
+
+/* Monospace dotted-leader values */
+.dotted-row::after {
+  content: " ";
+  flex-grow: 1;
+  border-bottom: 1px dotted rgba(148, 163, 184, 0.15);
+  margin: 0 8px;
+  order: 2;
+}
+.dotted-row span:first-child {
+  order: 1;
+}
+.dotted-row span:last-child {
+  order: 3;
+}
+
+/* Beautiful custom transition animations */
+.transition-glow {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.progress-ring__circle {
+  transition: stroke-dashoffset 0.35s;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* ─────────────────────────────────────────
+   Service Intake Form — Print Styles
+   ───────────────────────────────────────── */
+/* Intake print media styles removed - consolidated above */
+
+/* Intake print area — hidden on screen */
+.intake-print-area { display: none; }
+
+/* The A4 sheet */
+.intake-print-sheet {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: white;
+  color: #111827;
+  font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+  font-size: 10pt;
+  padding: 14mm 16mm 12mm;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.intake-accent-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(to right, #2563eb, #111827, #10b981);
+}
+
+.intake-title-block {
+  text-align: center;
+  margin-bottom: 10px;
+  padding-top: 4px;
+}
+
+.intake-title {
+  font-size: 14pt;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0f172a;
+  margin: 0;
+}
+
+.intake-subtitle {
+  font-size: 8pt;
+  color: #6b7280;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 3px 0 0;
+}
+
+.intake-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.intake-meta-item { display: flex; flex-direction: column; }
+
+.intake-meta-label {
+  font-size: 7pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.intake-meta-value {
+  font-size: 9pt;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.intake-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+
+.intake-section-title {
+  font-size: 8pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0f172a;
+  border-bottom: 1.5px solid #0f172a;
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+}
+
+.intake-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+
+.intake-table th {
+  background: #f1f5f9;
+  font-size: 7.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 5px 7px;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  text-align: left;
+}
+
+.intake-table td {
+  padding: 4px 7px;
+  border: 1px solid #e2e8f0;
+  vertical-align: middle;
+  color: #1e293b;
+}
+
+.intake-col-status {
+  width: 48px;
+  text-align: center !important;
+}
+
+.intake-check {
+  font-size: 11pt;
+  font-weight: 900;
+  text-align: center;
+  color: #16a34a;
+}
+
+.intake-rusak { color: #dc2626 !important; }
+
+.intake-comp-label { font-weight: 600; }
+
+.intake-notes-col {
+  color: #64748b;
+  font-style: italic;
+  font-size: 8.5pt;
+}
+
+.intake-kerusakan-box {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 8px 10px;
+  min-height: 36px;
+  font-size: 9pt;
+  color: #374151;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.intake-terms {
+  margin-top: 12px;
+  font-size: 7.5pt;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.intake-terms strong {
+  display: block;
+  font-size: 8pt;
+  color: #374151;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.intake-terms ol {
+  margin: 0;
+  padding-left: 14px;
+}
+
+.intake-terms li { margin-bottom: 2px; }
+
+.intake-sign-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 14px;
+  border-top: 1px solid #cbd5e1;
+  padding-top: 10px;
+}
+
+.intake-sign-box {
+  flex: 1;
+  text-align: center;
+}
+
+.intake-sign-line {
+  border-bottom: 1px solid #94a3b8;
+  height: 42px;
+  margin-bottom: 5px;
+}
+
+.intake-sign-label {
+  font-size: 8pt;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.intake-sign-label-sm { font-size: 7pt; }
+
+.intake-sign-name {
+  font-size: 9pt;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 3px;
+}
