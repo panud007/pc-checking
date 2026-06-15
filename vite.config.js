@@ -5,5 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: './',
+  server: {
+    allowedHosts: ['pcc.ngntd.my.id']
+  },
+  preview: {
+    allowedHosts: ['pcc.ngntd.my.id']
+  }
 })
 
