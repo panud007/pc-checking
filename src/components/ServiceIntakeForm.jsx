@@ -4,7 +4,7 @@ import {
   AlertTriangle, FileText, ArrowLeft, Plus, Laptop, Cpu, Layers, HardDrive, Monitor,
   Search, Scan
 } from 'lucide-react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 // ─── Component definitions ────────────────────────────────────────────────────
 // detect field: 'manual' | 'diagnostic_keyboard' | 'diagnostic_mouse' |
@@ -303,16 +303,29 @@ export default function ServiceIntakeForm({
     if (showScanner) {
       const timer = setTimeout(() => {
         try {
-          const html5QrCode = new Html5Qrcode("reader");
+          const formats = [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.CODABAR
+          ];
+          const html5QrCode = new Html5Qrcode("reader", { formatsToSupport: formats });
           html5QrCodeRef.current = html5QrCode;
           
           html5QrCode.start(
             { facingMode: "environment" },
             {
-              fps: 10,
+              fps: 15,
               qrbox: (width, height) => {
-                const size = Math.min(width, height) * 0.7;
-                return { width: size, height: size };
+                const qrWidth = Math.round(width * 0.85);
+                const qrHeight = Math.round(height * 0.55);
+                return { width: qrWidth, height: qrHeight };
               }
             },
             (decodedText) => {
@@ -1702,7 +1715,7 @@ export default function ServiceIntakeForm({
 
       {showScanner && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-5 shadow-2xl animate-fade-in flex flex-col gap-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm sm:max-w-md p-4 sm:p-5 shadow-2xl animate-fade-in flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2 text-indigo-400 font-bold">
                 <Scan size={18} />
@@ -1717,9 +1730,9 @@ export default function ServiceIntakeForm({
               </button>
             </div>
             
-            <div className="relative overflow-hidden rounded-xl bg-black border border-zinc-850 aspect-video flex items-center justify-center">
-              <div id="reader" className="w-full h-full"></div>
-              <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-indigo-500/20 rounded-xl m-4">
+            <div className="relative overflow-hidden rounded-xl bg-black border border-zinc-850 w-full flex items-center justify-center">
+              <div id="reader" className="w-full"></div>
+              <div className="absolute inset-0 pointer-events-none border border-dashed border-indigo-500/30 rounded-xl m-4">
                 <div className="scanner-overlay-line"></div>
               </div>
             </div>
