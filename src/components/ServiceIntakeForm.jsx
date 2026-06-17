@@ -331,24 +331,29 @@ export default function ServiceIntakeForm({
           });
           html5QrCodeRef.current = html5QrCode;
           
-          html5QrCode.start(
-            {
-              facingMode: "environment",
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            },
-            {
-              fps: 15
-            },
-            (decodedText) => {
-              setCustomerInfo(prev => ({ ...prev, noNota: decodedText }));
-              stopScanner();
-            },
-            (errorMessage) => {
-              // Ignore verbose error messages
-            }
-          ).catch(err => {
-            console.error("Failed to start scanner:", err);
+          const startScannerWithConstraints = (constraints) => {
+            return html5QrCode.start(
+              constraints,
+              { fps: 15 },
+              (decodedText) => {
+                setCustomerInfo(prev => ({ ...prev, noNota: decodedText }));
+                stopScanner();
+              },
+              (errorMessage) => {
+                // Ignore verbose error messages
+              }
+            );
+          };
+
+          startScannerWithConstraints({
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }).catch(err => {
+            console.warn("Failed with HD constraints, falling back to default environment camera:", err);
+            return startScannerWithConstraints({ facingMode: "environment" });
+          }).catch(err => {
+            console.error("Failed to start scanner on all constraints:", err);
             setScannerError("Gagal membuka kamera. Pastikan izin kamera telah diberikan.");
           });
         } catch (e) {
