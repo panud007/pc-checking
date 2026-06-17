@@ -310,56 +310,75 @@ export default function ServiceIntakeForm({
       }
 
       const timer = setTimeout(() => {
-        try {
-          const formats = [
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.ITF,
-            Html5QrcodeSupportedFormats.CODE_93,
-            Html5QrcodeSupportedFormats.CODABAR
-          ];
-          const html5QrCode = new Html5Qrcode("reader", {
-            formatsToSupport: formats,
-            experimentalFeatures: {
-              useBarCodeDetectorIfSupported: true
-            }
-          });
-          html5QrCodeRef.current = html5QrCode;
-          
-          const startScannerWithConstraints = (constraints) => {
-            return html5QrCode.start(
-              constraints,
-              { fps: 15 },
-              (decodedText) => {
-                setCustomerInfo(prev => ({ ...prev, noNota: decodedText }));
-                stopScanner();
-              },
-              (errorMessage) => {
-                // Ignore verbose error messages
-              }
-            );
-          };
+        const formats = [
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.ITF,
+          Html5QrcodeSupportedFormats.CODE_93,
+          Html5QrcodeSupportedFormats.CODABAR
+        ];
 
-          startScannerWithConstraints({
-            facingMode: "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }).catch(err => {
-            console.warn("Failed with HD constraints, falling back to default environment camera:", err);
-            return startScannerWithConstraints({ facingMode: "environment" });
-          }).catch(err => {
-            console.error("Failed to start scanner on all constraints:", err);
-            setScannerError("Gagal membuka kamera. Pastikan izin kamera telah diberikan.");
-          });
-        } catch (e) {
-          console.error("Failed to instantiate Html5Qrcode:", e);
-          setScannerError("Gagal memuat sistem pemindai.");
-        }
+        const startWithFallback = async () => {
+          let html5QrCode;
+          
+          // Step 1: Try with BarcodeDetector and HD resolution
+          try {
+            html5QrCode = new Html5Qrcode("reader", {
+              formatsToSupport: formats,
+              experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+            });
+            html5QrCodeRef.current = html5QrCode;
+            await html5QrCode.start(
+              { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+              { fps: 15 },
+              (text) => { setCustomerInfo(prev => ({ ...prev, noNota: text })); stopScanner(); },
+              () => {}
+            );
+            return;
+          } catch (err1) {
+            console.warn("Scanner Step 1 failed, trying Step 2 (no HD constraints)...", err1);
+          }
+
+          // Step 2: Try with BarcodeDetector and default camera
+          try {
+            if (html5QrCodeRef.current) {
+              await html5QrCodeRef.current.start(
+                { facingMode: "environment" },
+                { fps: 15 },
+                (text) => { setCustomerInfo(prev => ({ ...prev, noNota: text })); stopScanner(); },
+                () => {}
+              );
+              return;
+            }
+          } catch (err2) {
+            console.warn("Scanner Step 2 failed, trying Step 3 (no BarcodeDetector)...", err2);
+          }
+
+          // Step 3: Try standard Html5Qrcode without experimental features and default camera
+          try {
+            html5QrCode = new Html5Qrcode("reader", { formatsToSupport: formats });
+            html5QrCodeRef.current = html5QrCode;
+            await html5QrCode.start(
+              { facingMode: "environment" },
+              { fps: 15 },
+              (text) => { setCustomerInfo(prev => ({ ...prev, noNota: text })); stopScanner(); },
+              () => {}
+            );
+          } catch (err3) {
+            console.error("Scanner Step 3 failed:", err3);
+            throw err3;
+          }
+        };
+
+        startWithFallback().catch(err => {
+          console.error("All scanner fallbacks failed:", err);
+          setScannerError("Gagal membuka kamera. Pastikan izin kamera telah diberikan.");
+        });
       }, 150);
 
       return () => clearTimeout(timer);
