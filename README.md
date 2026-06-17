@@ -5,6 +5,14 @@
 [![TailwindCSS](https://img.shields.io/badge/tailwindcss-v3.4.19-38bdf8.svg?logo=tailwind-css)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
+---
+
+### 🔗 Repositori Terkait
+
+* **Repository Backend API (Laravel):** [panud007/pc-checking-api](https://github.com/panud007/pc-checking-api)
+
+---
+
 PC Quick Diagnostic Tool adalah aplikasi berbasis web yang dirancang khusus untuk teknisi komputer dalam melakukan pengetesan komponen perangkat keras (hardware) secara interaktif, cepat, dan terstandarisasi sebelum melakukan penerimaan servis perangkat (*Service Intake*).
 
 Aplikasi ini menggunakan teknologi modern client-side dengan dukungan sinkronisasi basis data Laravel API jarak jauh (*Remote Laravel API Database Sync*) dan fallback penyimpanan lokal otomatis (*LocalStorage Fallback*).
