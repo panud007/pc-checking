@@ -282,6 +282,8 @@ export default function ServiceIntakeForm({
   const [showScanner, setShowScanner] = useState(false);
   const html5QrCodeRef = useRef(null);
   const [scannerError, setScannerError] = useState(null);
+  const [scannerWarning, setScannerWarning] = useState(null);
+  const warningTimeoutRef = useRef(null);
 
   const stopScanner = () => {
     if (html5QrCodeRef.current) {
@@ -300,9 +302,77 @@ export default function ServiceIntakeForm({
     }
   };
 
+  const handleScanSuccess = (text) => {
+    if (!text) return;
+    
+    let cleanText = text.trim();
+    
+    // If it's a URL, analyze and attempt to extract invoice code
+    if (/^https?:\/\//i.test(cleanText)) {
+      const lowercaseUrl = cleanText.toLowerCase();
+      
+      // Filter out generic advertising/tracking landing pages
+      const isGeneric = 
+        lowercaseUrl.includes('bit.ly') || 
+        lowercaseUrl.includes('enterkomputer.com/tracking') ||
+        lowercaseUrl.includes('play.google.com') ||
+        lowercaseUrl.includes('apps.apple.com') ||
+        lowercaseUrl.includes('linktr.ee');
+        
+      if (isGeneric) {
+        setScannerWarning("QR Code promosi terdeteksi. Silakan arahkan kamera ke Barcode Nota (garis-garis).");
+        if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+        warningTimeoutRef.current = setTimeout(() => setScannerWarning(null), 4000);
+        return;
+      }
+      
+      try {
+        const url = new URL(cleanText);
+        const segments = url.pathname.split('/').filter(Boolean);
+        const lastSegment = segments[segments.length - 1];
+        
+        if (lastSegment && /^[A-Z0-9_-]{5,15}$/i.test(lastSegment)) {
+          cleanText = lastSegment;
+        } else {
+          // Check query parameters for common invoice fields
+          let foundParam = null;
+          for (const key of ['nota', 'invoice', 'id', 'code', 'ticket']) {
+            const val = url.searchParams.get(key);
+            if (val && /^[A-Z0-9_-]{5,15}$/i.test(val)) {
+              foundParam = val;
+              break;
+            }
+          }
+          if (foundParam) {
+            cleanText = foundParam;
+          } else {
+            setScannerWarning("URL terdeteksi tetapi kode nota tidak ditemukan.");
+            if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+            warningTimeoutRef.current = setTimeout(() => setScannerWarning(null), 4000);
+            return;
+          }
+        }
+      } catch (e) {
+        setScannerWarning("Format tidak valid. Arahkan ke Barcode Nota.");
+        if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+        warningTimeoutRef.current = setTimeout(() => setScannerWarning(null), 4000);
+        return;
+      }
+    }
+    
+    // Strip leading '#' if present (since printed receipts prefix invoice IDs with #)
+    if (cleanText.startsWith('#')) {
+      cleanText = cleanText.substring(1);
+    }
+    
+    setCustomerInfo(prev => ({ ...prev, noNota: cleanText }));
+    stopScanner();
+  };
+
   useEffect(() => {
     if (showScanner) {
       setScannerError(null);
+      setScannerWarning(null);
       
       if (!window.isSecureContext) {
         setScannerError("Kamera diblokir browser karena koneksi HTTP tidak aman. Silakan gunakan HTTPS atau localhost.");
@@ -336,7 +406,7 @@ export default function ServiceIntakeForm({
             await html5QrCode.start(
               { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
               { fps: 15 },
-              (text) => { setCustomerInfo(prev => ({ ...prev, noNota: text })); stopScanner(); },
+              handleScanSuccess,
               () => {}
             );
             return;
@@ -350,7 +420,7 @@ export default function ServiceIntakeForm({
               await html5QrCodeRef.current.start(
                 { facingMode: "environment" },
                 { fps: 15 },
-                (text) => { setCustomerInfo(prev => ({ ...prev, noNota: text })); stopScanner(); },
+                handleScanSuccess,
                 () => {}
               );
               return;
@@ -366,7 +436,7 @@ export default function ServiceIntakeForm({
             await html5QrCode.start(
               { facingMode: "environment" },
               { fps: 15 },
-              (text) => { setCustomerInfo(prev => ({ ...prev, noNota: text })); stopScanner(); },
+              handleScanSuccess,
               () => {}
             );
           } catch (err3) {
@@ -387,6 +457,9 @@ export default function ServiceIntakeForm({
     return () => {
       if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
         html5QrCodeRef.current.stop().catch(err => console.error(err));
+      }
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
       }
     };
   }, [showScanner]);
@@ -1776,7 +1849,14 @@ export default function ServiceIntakeForm({
                   <div className="text-[9px] text-zinc-500 mt-2 font-mono">Secure Context (HTTPS / Localhost) required for camera access.</div>
                 </div>
               ) : (
-                <div id="reader" className="w-full h-full"></div>
+                <>
+                  <div id="reader" className="w-full h-full"></div>
+                  {scannerWarning && (
+                    <div className="absolute bottom-3 left-3 right-3 bg-rose-950/90 border border-rose-500/30 px-3 py-2 rounded-lg text-[10px] text-rose-200 text-center animate-bounce z-20 backdrop-blur-sm">
+                      ⚠️ {scannerWarning}
+                    </div>
+                  )}
+                </>
               )}
               {!scannerError && (
                 <div className="absolute inset-0 pointer-events-none border border-dashed border-indigo-500/30 rounded-xl m-4">
