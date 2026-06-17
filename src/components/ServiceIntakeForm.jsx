@@ -323,18 +323,22 @@ export default function ServiceIntakeForm({
             Html5QrcodeSupportedFormats.CODE_93,
             Html5QrcodeSupportedFormats.CODABAR
           ];
-          const html5QrCode = new Html5Qrcode("reader", { formatsToSupport: formats });
+          const html5QrCode = new Html5Qrcode("reader", {
+            formatsToSupport: formats,
+            experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true
+            }
+          });
           html5QrCodeRef.current = html5QrCode;
           
           html5QrCode.start(
-            { facingMode: "environment" },
             {
-              fps: 15,
-              qrbox: (width, height) => {
-                const qrWidth = Math.round(width * 0.85);
-                const qrHeight = Math.round(height * 0.55);
-                return { width: qrWidth, height: qrHeight };
-              }
+              facingMode: "environment",
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            {
+              fps: 15
             },
             (decodedText) => {
               setCustomerInfo(prev => ({ ...prev, noNota: decodedText }));
