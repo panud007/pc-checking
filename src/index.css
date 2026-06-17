@@ -480,3 +480,23 @@
   color: #0f172a;
   margin-top: 3px;
 }
+
+/* Scanner animation */
+@keyframes scannerScan {
+  0%, 100% {
+    top: 0%;
+  }
+  50% {
+    top: 100%;
+  }
+}
+
+.scanner-overlay-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #4f46e5;
+  box-shadow: 0 0 8px #4f46e5, 0 0 15px #4f46e5;
+  animation: scannerScan 2.5s ease-in-out infinite;
+}

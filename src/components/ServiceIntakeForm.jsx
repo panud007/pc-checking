@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   ClipboardList, User, Zap, Save, Printer, X, CheckCircle,
   AlertTriangle, FileText, ArrowLeft, Plus, Laptop, Cpu, Layers, HardDrive, Monitor,
-  Search
+  Search, Scan
 } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
 
 // ─── Component definitions ────────────────────────────────────────────────────
 // detect field: 'manual' | 'diagnostic_keyboard' | 'diagnostic_mouse' |
@@ -276,6 +277,68 @@ export default function ServiceIntakeForm({
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [printWithoutNota, setPrintWithoutNota] = useState(false);
   const isFirstMount = useRef(true);
+
+  // Barcode scanner states
+  const [showScanner, setShowScanner] = useState(false);
+  const html5QrCodeRef = useRef(null);
+
+  const stopScanner = () => {
+    if (html5QrCodeRef.current) {
+      if (html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().then(() => {
+          setShowScanner(false);
+        }).catch(err => {
+          console.error("Failed to stop scanner:", err);
+          setShowScanner(false);
+        });
+      } else {
+        setShowScanner(false);
+      }
+    } else {
+      setShowScanner(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showScanner) {
+      const timer = setTimeout(() => {
+        try {
+          const html5QrCode = new Html5Qrcode("reader");
+          html5QrCodeRef.current = html5QrCode;
+          
+          html5QrCode.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: (width, height) => {
+                const size = Math.min(width, height) * 0.7;
+                return { width: size, height: size };
+              }
+            },
+            (decodedText) => {
+              setCustomerInfo(prev => ({ ...prev, noNota: decodedText }));
+              stopScanner();
+            },
+            (errorMessage) => {
+              // Ignore verbose error messages
+            }
+          ).catch(err => {
+            console.error("Failed to start scanner:", err);
+          });
+        } catch (e) {
+          console.error("Failed to instantiate Html5Qrcode:", e);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+
+    return () => {
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().catch(err => console.error(err));
+      }
+    };
+  }, [showScanner]);
 
   // Split storage into drives array
   const drives = customerInfo.storage ? customerInfo.storage.split('\n') : [];
@@ -1110,14 +1173,26 @@ export default function ServiceIntakeForm({
                     { label: 'Tanggal Masuk',         field: 'tanggalMasuk',  type: 'date', placeholder: '' },
                   ].map(({ label, field, type, placeholder, mono }) => (
                     <div key={field} className="flex flex-col gap-1">
-                      <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">{label}</label>
-                      <input
-                        type={type}
-                        value={customerInfo[field]}
-                        onChange={e => handleCustomerChange(field, e.target.value)}
-                        placeholder={placeholder}
-                        className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 text-xs focus:outline-none focus:border-indigo-500 transition-all ${mono ? 'font-mono' : ''}`}
-                      />
+                      <label className="text-[10px] font-semibold text-zinc-450 uppercase tracking-wider">{label}</label>
+                      <div className="relative flex items-center">
+                        <input
+                          type={type}
+                          value={customerInfo[field]}
+                          onChange={e => handleCustomerChange(field, e.target.value)}
+                          placeholder={placeholder}
+                          className={`w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-200 text-xs focus:outline-none focus:border-indigo-550 transition-all ${mono ? 'font-mono pr-10' : ''}`}
+                        />
+                        {field === 'noNota' && (
+                          <button
+                            type="button"
+                            onClick={() => setShowScanner(true)}
+                            className="absolute right-2.5 p-1 text-zinc-400 hover:text-indigo-400 active:scale-95 transition-all"
+                            title="Scan Barcode / QR Code"
+                          >
+                            <Scan size={15} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1619,6 +1694,47 @@ export default function ServiceIntakeForm({
                 className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all active:scale-95 shadow-[0_0_10px_rgba(37,99,235,0.2)]"
               >
                 Mengerti & Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showScanner && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-5 shadow-2xl animate-fade-in flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-indigo-400 font-bold">
+                <Scan size={18} />
+                <h3 className="text-sm uppercase tracking-wider font-mono">Scan Barcode / QR Code</h3>
+              </div>
+              <button 
+                type="button"
+                onClick={stopScanner}
+                className="p-1 rounded-lg bg-slate-950 hover:bg-slate-850 text-slate-400 hover:text-white transition-all border border-slate-900"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            
+            <div className="relative overflow-hidden rounded-xl bg-black border border-zinc-850 aspect-video flex items-center justify-center">
+              <div id="reader" className="w-full h-full"></div>
+              <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-indigo-500/20 rounded-xl m-4">
+                <div className="scanner-overlay-line"></div>
+              </div>
+            </div>
+            
+            <p className="text-[10px] text-zinc-450 text-center leading-normal">
+              Arahkan kamera ke Barcode nota penjualan atau QR Code. Pastikan pencahayaan cukup dan kode terlihat jelas di dalam kotak.
+            </p>
+            
+            <div className="border-t border-slate-800 pt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={stopScanner}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-350 text-xs font-bold transition-all active:scale-95"
+              >
+                Batal
               </button>
             </div>
           </div>
