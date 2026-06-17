@@ -7,7 +7,7 @@
 
 ---
 
-### 🔗 Repositori Terkait
+## 🔗 Repositori Terkait
 
 * **Repository Backend API (Laravel):** [panud007/pc-checking-api](https://github.com/panud007/pc-checking-api)
 
