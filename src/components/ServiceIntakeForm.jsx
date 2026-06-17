@@ -1730,8 +1730,8 @@ export default function ServiceIntakeForm({
               </button>
             </div>
             
-            <div className="relative overflow-hidden rounded-xl bg-black border border-zinc-850 w-full flex items-center justify-center">
-              <div id="reader" className="w-full"></div>
+            <div className="relative overflow-hidden rounded-xl bg-black border border-zinc-850 w-full aspect-[4/3] sm:aspect-video flex items-center justify-center">
+              <div id="reader" className="w-full h-full"></div>
               <div className="absolute inset-0 pointer-events-none border border-dashed border-indigo-500/30 rounded-xl m-4">
                 <div className="scanner-overlay-line"></div>
               </div>
