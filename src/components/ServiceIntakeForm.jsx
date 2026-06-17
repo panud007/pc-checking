@@ -281,6 +281,7 @@ export default function ServiceIntakeForm({
   // Barcode scanner states
   const [showScanner, setShowScanner] = useState(false);
   const html5QrCodeRef = useRef(null);
+  const [scannerError, setScannerError] = useState(null);
 
   const stopScanner = () => {
     if (html5QrCodeRef.current) {
@@ -301,6 +302,13 @@ export default function ServiceIntakeForm({
 
   useEffect(() => {
     if (showScanner) {
+      setScannerError(null);
+      
+      if (!window.isSecureContext) {
+        setScannerError("Kamera diblokir browser karena koneksi HTTP tidak aman. Silakan gunakan HTTPS atau localhost.");
+        return;
+      }
+
       const timer = setTimeout(() => {
         try {
           const formats = [
@@ -337,11 +345,13 @@ export default function ServiceIntakeForm({
             }
           ).catch(err => {
             console.error("Failed to start scanner:", err);
+            setScannerError("Gagal membuka kamera. Pastikan izin kamera telah diberikan.");
           });
         } catch (e) {
           console.error("Failed to instantiate Html5Qrcode:", e);
+          setScannerError("Gagal memuat sistem pemindai.");
         }
-      }, 100);
+      }, 150);
 
       return () => clearTimeout(timer);
     }
@@ -1731,10 +1741,20 @@ export default function ServiceIntakeForm({
             </div>
             
             <div className="relative overflow-hidden rounded-xl bg-black border border-zinc-850 w-full aspect-[4/3] sm:aspect-video flex items-center justify-center">
-              <div id="reader" className="w-full h-full"></div>
-              <div className="absolute inset-0 pointer-events-none border border-dashed border-indigo-500/30 rounded-xl m-4">
-                <div className="scanner-overlay-line"></div>
-              </div>
+              {scannerError ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-zinc-950/95">
+                  <span className="text-2xl mb-2">⚠️</span>
+                  <div className="text-xs text-rose-400 font-semibold leading-relaxed">{scannerError}</div>
+                  <div className="text-[9px] text-zinc-500 mt-2 font-mono">Secure Context (HTTPS / Localhost) required for camera access.</div>
+                </div>
+              ) : (
+                <div id="reader" className="w-full h-full"></div>
+              )}
+              {!scannerError && (
+                <div className="absolute inset-0 pointer-events-none border border-dashed border-indigo-500/30 rounded-xl m-4">
+                  <div className="scanner-overlay-line"></div>
+                </div>
+              )}
             </div>
             
             <p className="text-[10px] text-zinc-450 text-center leading-normal">
