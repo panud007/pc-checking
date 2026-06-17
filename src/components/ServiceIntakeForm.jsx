@@ -395,8 +395,13 @@ export default function ServiceIntakeForm({
 
         const startWithFallback = async () => {
           let html5QrCode;
+          const qrboxConfig = (w, h) => {
+            const width = Math.min(Math.floor(w * 0.85), 360);
+            const height = Math.min(Math.floor(h * 0.45), 180);
+            return { width, height };
+          };
           
-          // Step 1: Try with BarcodeDetector and HD resolution
+          // Step 1: Try with BarcodeDetector and standard resolution (FASTEST STARTUP & GPU DECODING)
           try {
             html5QrCode = new Html5Qrcode("reader", {
               formatsToSupport: formats,
@@ -404,43 +409,43 @@ export default function ServiceIntakeForm({
             });
             html5QrCodeRef.current = html5QrCode;
             await html5QrCode.start(
-              { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-              { fps: 15 },
+              { facingMode: "environment" },
+              { fps: 15, qrbox: qrboxConfig },
               handleScanSuccess,
               () => {}
             );
             return;
           } catch (err1) {
-            console.warn("Scanner Step 1 failed, trying Step 2 (no HD constraints)...", err1);
+            console.warn("Scanner Step 1 (standard resolution + BarcodeDetector) failed, trying Step 2...", err1);
           }
 
-          // Step 2: Try with BarcodeDetector and default camera
+          // Step 2: Try with BarcodeDetector and HD resolution (if default resolution failed or failed to select camera)
           try {
             if (html5QrCodeRef.current) {
               await html5QrCodeRef.current.start(
-                { facingMode: "environment" },
-                { fps: 15 },
+                { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+                { fps: 15, qrbox: qrboxConfig },
                 handleScanSuccess,
                 () => {}
               );
               return;
             }
           } catch (err2) {
-            console.warn("Scanner Step 2 failed, trying Step 3 (no BarcodeDetector)...", err2);
+            console.warn("Scanner Step 2 (HD resolution + BarcodeDetector) failed, trying Step 3...", err2);
           }
 
-          // Step 3: Try standard Html5Qrcode without experimental features and default camera
+          // Step 3: Try standard Html5Qrcode without experimental features and default camera (soft decoder fallback)
           try {
             html5QrCode = new Html5Qrcode("reader", { formatsToSupport: formats });
             html5QrCodeRef.current = html5QrCode;
             await html5QrCode.start(
               { facingMode: "environment" },
-              { fps: 15 },
+              { fps: 15, qrbox: qrboxConfig },
               handleScanSuccess,
               () => {}
             );
           } catch (err3) {
-            console.error("Scanner Step 3 failed:", err3);
+            console.error("Scanner Step 3 (standard decoder) failed:", err3);
             throw err3;
           }
         };
@@ -1859,8 +1864,14 @@ export default function ServiceIntakeForm({
                 </>
               )}
               {!scannerError && (
-                <div className="absolute inset-0 pointer-events-none border border-dashed border-indigo-500/30 rounded-xl m-4">
-                  <div className="scanner-overlay-line"></div>
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                  <div className="relative w-[85%] h-[45%] border border-dashed border-indigo-500/50 rounded-lg flex items-center justify-center">
+                    <div className="scanner-overlay-line"></div>
+                    <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-indigo-400"></div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-indigo-400"></div>
+                    <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-indigo-400"></div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-indigo-400"></div>
+                  </div>
                 </div>
               )}
             </div>
